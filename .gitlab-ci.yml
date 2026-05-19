@@ -9,4 +9,4 @@ test-units:
     - composer install
     - php artisan test
   tags: 
-    - project
+    - bookstack-runner
