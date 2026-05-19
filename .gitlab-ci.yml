@@ -6,11 +6,14 @@ image: php:8.2-cli
 test-units: 
   stage: test
   before_script:
+    - docker-php-ext-install gd
+    - docker-php-ext-install zip
     - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
     - php composer-setup.php
     - php -r "unlink('composer-setup.php');"
     - mv composer.phar /usr/local/bin/composer
     - composer install
   script:
+    -
     - echo "Running tests..."
     - php artisan test
