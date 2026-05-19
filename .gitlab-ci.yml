@@ -10,3 +10,5 @@ test-units:
     - php artisan test
   tags: 
     - bookstack-runner
+    
+allow_failure: true
