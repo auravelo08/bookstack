@@ -1,6 +1,7 @@
 stages:
   - test
 
+image: php:8.2-cli
 test:
   script:
     - echo "Running tests..."
