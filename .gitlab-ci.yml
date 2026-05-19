@@ -2,7 +2,15 @@ stages:
   - test
 
 image: php:8.2-cli
-test:
+
+test-units: 
+  stage: test
+  before_script:
+    - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+    - php composer-setup.php
+    - php -r "unlink('composer-setup.php');"
+    - mv composer.phar /usr/local/bin/composer
+    - composer install
   script:
     - echo "Running tests..."
     - php artisan test
