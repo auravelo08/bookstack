@@ -1,20 +1,12 @@
+image: rtnetlab/gitlab-ci-php:8.3
+
 stages:
   - test
 
-image: php:8.2-cli
-
-test-units: 
+test-units:
   stage: test
-  before_script:
-    - apt update -yqq
-    - apt install git libpq-dev libzip-dev libpng-dev zlib1g-dev zip -yqq
-    - docker-php-ext-install gd
-    - docker-php-ext-install zip
-    - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-    - php composer-setup.php
-    - php -r "unlink('composer-setup.php');"
-    - mv composer.phar /usr/local/bin/composer
-    - composer install
   script:
-    - echo "Running tests..."
+    - composer install
     - php artisan test
+  tags: 
+    - bookstack-runner
