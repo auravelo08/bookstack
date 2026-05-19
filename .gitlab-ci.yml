@@ -2,5 +2,6 @@ stages:
   - test
 
 test:
-  script:
+  scripts:
     - echo "Running tests..."
+    - php artisan test
