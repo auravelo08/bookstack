@@ -2,5 +2,5 @@ stages:
   - test
 
 test:
-  scripts:
+  script:
     - echo "Running tests..."
