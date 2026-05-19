@@ -6,6 +6,8 @@ image: php:8.2-cli
 test-units: 
   stage: test
   before_script:
+    - apt update -yqq
+    - apt install git libpq-dev libzip-dev libpng-dev zlib1g-dev zip -yqq
     - docker-php-ext-install gd
     - docker-php-ext-install zip
     - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
