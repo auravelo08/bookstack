@@ -1,13 +1,38 @@
-image: rtnetlab/gitlab-ci-php:8.3
 
 stages:
   - test
+  - build
+  - deploy
+
+variables:
+  IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  PLATFORMS: linux/amd64,linux/arm64
 
 test-units:
   stage: test
+  image: composer:2
   script:
     - composer install
     - php artisan test
+
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE .
+    - docker push $IMAGE
+
+
+deploy: 
+  stage: deploy
+  script:
+    - echo "déploiement au sprint1"
+
   tags: 
     - bookstack-runner
   allow_failure: true
