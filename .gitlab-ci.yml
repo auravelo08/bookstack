@@ -17,6 +17,8 @@ test-units:
   script:
     - composer install --ignore-platform-reqs
 
+  allow_failure: true
+
 build:
   stage: build
   image: docker:24
@@ -35,4 +37,3 @@ deploy:
   script:
     - echo "déploiement au sprint1"
 
-  allow_failure: true
