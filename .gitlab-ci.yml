@@ -11,4 +11,5 @@ variables:
 build:
   stage: build
   script:
+    - echo "coucou"
     - docker build -t $IMAGE .
