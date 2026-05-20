@@ -16,7 +16,7 @@ services:
       - ./dev/docker/init.db:/docker-entrypoint-initdb.d
       - db:/var/lib/mysql
   app:
-    image: registry.gitlab.com/capsule-bookstack/bookstack:18df07b9
+    image: registry.gitlab.com/capsule-bookstack/bookstack:df01c76a
     environment:
       APP_URL: http://localhost:${DEV_PORT:-8080}
       DB_CONNECTION: mysql
