@@ -1,6 +1,6 @@
 default:
   tags: 
-    - bookstack-runner
+    - bs-runner-2
 
 stages:
   - test
@@ -11,13 +11,12 @@ variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 #   PLATFORMS: linux/amd64,linux/arm64
 
-# test-units:
-#   stage: test
-#   image: composer:2
-#   script:
-#     - composer install --ignore-platform-reqs
-
-#   allow_failure: true
+test-units:
+  stage: test
+  image: composer:2
+  script:
+    - composer install --ignore-platform-reqs
+  allow_failure: true
 
 build:
   stage: build
@@ -27,9 +26,9 @@ build:
   # variables:
   #   DOCKER_TLS_CERTDIR: ""
   script:
-    # - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $IMAGE .
-    # - docker push $IMAGE
+    - docker push $IMAGE
 
 
 deploy: 
