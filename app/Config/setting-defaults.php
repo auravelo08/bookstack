@@ -10,7 +10,7 @@
 
 return [
 
-    'app-name'             => 'BookStack',
+    'app-name'             => 'BookStack La Capsule',
     'app-logo'             => '',
     'app-name-header'      => true,
     'app-editor'           => 'wysiwyg',
