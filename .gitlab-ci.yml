@@ -14,7 +14,7 @@ test-units:
   script:
     - composer install
     - php artisan test
-
+    - composer install --ignore-platform-reqs
 build:
   stage: build
   image: docker:24
