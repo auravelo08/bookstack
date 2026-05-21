@@ -18,7 +18,7 @@ RUN apt-get update && \
 # Installation des extensions PHP nécessaires
 RUN docker-php-ext-configure ldap --with-libdir="lib/$(gcc -dumpmachine)" && \
     docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install -j$(nproc) pdo_pgsql gd ldap zip
+    docker-php-ext-install -j$(nproc) pdo_mysql gd ldap zip
 
 # Installation de Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
