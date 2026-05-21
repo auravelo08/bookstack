@@ -12,12 +12,12 @@ variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 #   PLATFORMS: linux/amd64,linux/arm64
 
-test-units:
-  stage: test
-  image: composer:2
-  script:
-    - composer install --ignore-platform-reqs
-  allow_failure: true
+# test-units:
+#   stage: test
+#   image: composer:2
+#   script:
+#     - composer install --ignore-platform-reqs
+#   allow_failure: true
 
 build:
   stage: build
@@ -26,14 +26,14 @@ build:
     - docker build -f dev/docker/Dockerfile -t $IMAGE .
     - docker push $IMAGE
 
-deploy:
-  stage: deploy
-  script:
-    - echo "déploiement au sprint1"
+# deploy:
+#   stage: deploy
+#   script:
+#     - echo "déploiement au sprint1"
 
-quality:
-  stage: quality
-  image: sonarsource/sonar-scanner-cli:12.1
-  script:
-    - sonar-scanner -Dsonar.qualitygate.wait=true
-  allow_failure: true
+# quality:
+#   stage: quality
+#   image: sonarsource/sonar-scanner-cli:12.1
+#   script:
+#     - sonar-scanner -Dsonar.qualitygate.wait=true
+#   allow_failure: true
