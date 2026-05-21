@@ -33,7 +33,7 @@ build:
 
 quality:
   stage: quality
-  image: sonarsource/sonar-scanner-cli:12.1
+  image: sonarsource/sonar-scanner-cli:latest
   script:
     - sonar-scanner -Dsonar.qualitygate.wait=true
   allow_failure: true
