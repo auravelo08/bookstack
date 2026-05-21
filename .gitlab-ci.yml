@@ -10,6 +10,8 @@ stages:
 
 variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
+  GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
 #   PLATFORMS: linux/amd64,linux/arm64
 
 test-units:
@@ -31,9 +33,6 @@ deploy:
   script:
     - echo "déploiement au sprint1"
 
-variables:
-  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
-  GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
 sonarcloud-check:
   stage: quality
   image:
