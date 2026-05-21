@@ -3,10 +3,10 @@ default:
     - bs-runner-3
 
 stages:
+  - quality
   - test
   - build
   - deploy
-  - quality
 
 variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
