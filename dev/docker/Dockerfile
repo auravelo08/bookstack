@@ -1,6 +1,6 @@
 FROM php:8.3-apache
 
-# Install system dependencies
+# Install additional dependencies
 RUN apt-get update && \
     apt-get install -y \
         git \
@@ -24,10 +24,11 @@ RUN docker-php-ext-configure ldap --with-libdir="lib/$(gcc -dumpmachine)" && \
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Set working directory
+ENV APACHE_DOCUMENT_ROOT="/app/public"
+
 WORKDIR /app
 
-# COPY your BookStack clone into the image
+# Copy BookStack code
 COPY . /app
 
 # Install PHP dependencies
@@ -37,10 +38,16 @@ RUN composer install --no-dev --optimize-autoloader
 RUN npm install && npm run build
 
 # Configure Apache
-ENV APACHE_DOCUMENT_ROOT="/app/public"
 RUN a2enmod rewrite && \
     sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf && \
     sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Allow access to /app/public
+RUN echo "<Directory /app/public>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>" > /etc/apache2/conf-available/bookstack.conf \
+    && a2enconf bookstack
 
 # Permissions
 RUN chown -R www-data:www-data /app
