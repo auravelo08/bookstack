@@ -20,13 +20,9 @@ RUN git config --system --add safe.directory /app
 # Install PHP extensions
 RUN docker-php-ext-configure ldap --with-libdir="lib/$(gcc -dumpmachine)" && \
     docker-php-ext-configure gd --with-freetype --with-jpeg && \
-<<<<<<< Updated upstream
-    docker-php-ext-install -j$(nproc) pdo_pgsql gd ldap zip
-=======
     docker-php-ext-install -j$(nproc) pdo_mysql gd ldap zip && \
     pecl install xdebug && \
     docker-php-ext-enable xdebug
->>>>>>> Stashed changes
 
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
