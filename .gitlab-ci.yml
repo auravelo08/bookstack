@@ -21,8 +21,9 @@ test-units:
 
 build:
   stage: build
-  image: docker:cli  # Inutile d'avoir le daemon, juste le client CLI suffit
+  image: docker:cli
   script:
+    - docker info  # Test de connexion au socket
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $IMAGE -f dev/docker/Dockerfile .
     - docker push $IMAGE
