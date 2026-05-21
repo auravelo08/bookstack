@@ -21,12 +21,7 @@ test-units:
 
 build:
   stage: build
-  image: docker:27 # Utilise une image qui contient le client docker
-  services:
-    - docker:27-dind # Lance le démon docker en arrière-plan pour le job
-  variables:
-    DOCKER_HOST: tcp://docker:2375 # Indique au client docker de parler au service
-    DOCKER_TLS_CERTDIR: "" # Désactive le TLS pour simplifier la communication interne
+  image: docker:cli  # Inutile d'avoir le daemon, juste le client CLI suffit
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $IMAGE -f dev/docker/Dockerfile .
