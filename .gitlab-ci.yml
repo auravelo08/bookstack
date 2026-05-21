@@ -3,8 +3,8 @@ default:
     - bs-runner-3
 
 stages:
-  - test
   - build
+  - test
   - deploy
   - quality
 
@@ -60,8 +60,8 @@ build:
   #     # Déploiement du stack
   #     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/ubuntu/bookstack-stack.yml bookstack"
 
-  only:
-    - main
+  # only:
+  #   - main
 
 quality:
   stage: quality
