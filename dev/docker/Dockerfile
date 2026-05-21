@@ -12,6 +12,7 @@ RUN apt-get update && \
         libldap2-dev \
         libpng-dev \
         libzip-dev \
+        libpq-dev \
         wait-for-it && \
     rm -rf /var/lib/apt/lists/*
 
