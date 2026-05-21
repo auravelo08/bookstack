@@ -21,38 +21,44 @@ test-units:
 
 build:
   stage: build
+  image: docker:27 # Utilise une image qui contient le client docker
+  services:
+    - docker:27-dind # Lance le démon docker en arrière-plan pour le job
+  variables:
+    DOCKER_HOST: tcp://docker:2375 # Indique au client docker de parler au service
+    DOCKER_TLS_CERTDIR: "" # Désactive le TLS pour simplifier la communication interne
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $IMAGE -f dev/docker/Dockerfile .
     - docker push $IMAGE
 
-deploy:
-  stage: deploy
-  image: alpine:latest
+  # deploy:
+  #   stage: deploy
+  #   image: alpine:latest
 
-  before_script:
-    # Installation des outils SSH
-    - apk add --no-cache openssh-client
+  #   before_script:
+  #     # Installation des outils SSH
+  #     - apk add --no-cache openssh-client
 
-    # Démarrage de l'agent SSH
-    - eval $(ssh-agent -s)
+  #     # Démarrage de l'agent SSH
+  #     - eval $(ssh-agent -s)
 
-    # Ajout de la clé privée stockée dans GitLab CI
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  #     # Ajout de la clé privée stockée dans GitLab CI
+  #     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
 
-    # Préparation du dossier SSH
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
+  #     # Préparation du dossier SSH
+  #     - mkdir -p ~/.ssh
+  #     - chmod 700 ~/.ssh
 
-    # Ajout automatique de l'empreinte du Swarm master
-    - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
+  #     # Ajout automatique de l'empreinte du Swarm master
+  #     - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
 
-  script:
-    # Copie du stack vers le Swarm master
-    - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/ubuntu/bookstack-stack.yml
+  #   script:
+  #     # Copie du stack vers le Swarm master
+  #     - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/ubuntu/bookstack-stack.yml
 
-    # Déploiement du stack
-    - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/ubuntu/bookstack-stack.yml bookstack"
+  #     # Déploiement du stack
+  #     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/ubuntu/bookstack-stack.yml bookstack"
 
   only:
     - main
