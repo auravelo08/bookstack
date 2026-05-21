@@ -10,7 +10,7 @@ stages:
 
 variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-#   PLATFORMS: linux/amd64,linux/arm64
+  PLATFORMS: linux/amd64,linux/arm64
 
 test-units:
   stage: test
@@ -21,10 +21,13 @@ test-units:
 
 build:
   stage: build
+  before_script:
+    - docker run --privileged --rm tonistiigi/binfmt --install all
+    - docker buildx create --name multiarch --use || docker buildx use multiarch
+    - docker buildx inspect --bootstrap
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $IMAGE dev/docker
-    - docker push $IMAGE
+    - docker buildx build --platform "$PLATFORMS" -t $IMAGE -f dev/docker/Dockerfile --push .
 
 deploy:
   stage: deploy
