@@ -1,6 +1,6 @@
 default:
   tags:
-    - bs-runner-2
+    - bs-runner-3
 
 stages:
   - test
