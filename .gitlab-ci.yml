@@ -21,9 +21,9 @@ test-units:
 
 build:
   stage: build
-script:
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  - docker buildx build --platform "$PLATFORMS" -t $IMAGE --push dev/docker
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker buildx build --platform "$PLATFORMS" -t $IMAGE --push dev/docker
 
 deploy:
   stage: deploy
