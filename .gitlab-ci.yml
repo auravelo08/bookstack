@@ -28,8 +28,34 @@ build:
 
 deploy:
   stage: deploy
+  image: alpine:latest
+
+  before_script:
+    # Installation des outils SSH
+    - apk add --no-cache openssh-client
+
+    # Démarrage de l'agent SSH
+    - eval $(ssh-agent -s)
+
+    # Ajout de la clé privée stockée dans GitLab CI
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+
+    # Préparation du dossier SSH
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    # Ajout automatique de l'empreinte du Swarm master
+    - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
+
   script:
-    - echo "déploiement au sprint1"
+    # Copie du stack vers le Swarm master
+    - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/ubuntu/bookstack-stack.yml
+
+    # Déploiement du stack
+    - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/ubuntu/bookstack-stack.yml bookstack"
+
+  only:
+    - main
 
 quality:
   stage: quality
