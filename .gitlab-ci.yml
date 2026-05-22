@@ -22,8 +22,9 @@ test-units:
     DB_USERNAME: dbadmin
     DB_PASSWORD: bsCapsRdsPwd
   script:
-    - apt-get update && apt-get install -y unzip git libzip-dev
-    - docker-php-ext-install pdo_mysql zip
+    - apt-get update && apt-get install -y unzip git libzip-dev libpng-dev libjpeg-dev libfreetype6-dev
+    - docker-php-ext-configure gd --with-freetype --with-jpeg
+    - docker-php-ext-install gd pdo_mysql zip
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     - composer install --no-interaction --prefer-dist
     - until mysqladmin ping -h"$DB_HOST" -u"$DB_USERNAME" -p"$DB_PASSWORD" --silent; do echo "Waiting for RDS..."; sleep 5; done
@@ -34,12 +35,15 @@ test-units:
 
 build:
   stage: build
-  image: docker:cli
+  image: docker:24
+  services:
+    - name: docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
   script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $IMAGE -f dev/docker/Dockerfile .
-    - docker push $IMAGE
-  allow_failure: true
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker build -t "$IMAGE" -f dev/docker/Dockerfile .
+    - docker push "$IMAGE"
 
 deploy:
   stage: deploy
@@ -54,4 +58,4 @@ deploy:
     - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
   script:
     - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/bookstack/deploy-stack.yml
-    - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/boostack/deploy-stack.yml bookstack"
+    - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/bookstack/deploy-stack.yml bookstack"
