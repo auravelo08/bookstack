@@ -1,0 +1,37 @@
+services:
+  bookstack:
+    image: registry.gitlab.com/capsule-bookstack/bookstack:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - APP_URL=http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com
+      - DB_CONNECTION=mysql
+      - DB_HOST=shared-bookstack-keycloak-rds.crogwcggglt8.eu-north-1.rds.amazonaws.com
+      - DB_PORT=3306
+      - DB_DATABASE=bookstack_production
+      - DB_USERNAME=dbadmin
+      - DB_PASSWORD=$DB_PASSWORD
+      - SESSION_DRIVER=database
+      - APP_KEY=$APP_KEY
+      - STORAGE_TYPE=s3
+      - STORAGE_S3_KEY=$S3_KEY
+      - STORAGE_S3_SECRET=$S3_SECRET
+      - STORAGE_S3_BUCKET=bookstack-prod-bookstack
+      - STORAGE_S3_REGION=eu-north-1
+      - STORAGE_S3_ENDPOINT=https://s3.eu-north-1.amazonaws.com
+      - STORAGE_URL=https://d1l9s9ujralwdb.cloudfront.net
+    ports:
+      - target: 80
+        published: 6875
+        mode: host
+
+    volumes:
+      - bookstack_config:/config
+
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  bookstack_config:
