@@ -3,16 +3,28 @@ default:
     - bs-runner-3
 
 stages:
-  - build
-  - deploy
-  - quality
-  - load-testing
+  - units-test
+  # - build
+  # - deploy
+  # - quality
+  # - load-testing
 
 variables:
   IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
   IMAGE_SHA: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   GIT_DEPTH: "0"
+
+unit-test:
+  stage: units-test
+  image: php:8.2-fpm
+  variables:
+    DB_CONNECTION: sqlite
+    DB_DATABASE: ":memory:"
+  script:
+    - composer install
+    - php artisan migrate # Crée les tables en mémoire
+    - php artisan test
 
 build:
   stage: build
@@ -70,4 +82,4 @@ sonarcloud-check:
     paths:
       - .sonar/cache
   script:
-      - sonar-scanner
+    - sonar-scanner
