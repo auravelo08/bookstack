@@ -26,6 +26,9 @@ test-units:
      - composer install --prefer-dist --no-progress
      - cp .env.example .env
      - sed -i 's/^APP_ENV=.*/APP_ENV=testing/' .env
+     - sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+     - sed -i 's/^DB_DATABASE=.*/DB_DATABASE=:memory:/' .env
+     - grep -q '^APP_KEY=' .env || echo 'APP_KEY=' >> .env
      - php artisan key:generate --force
      - php artisan migrate --force  # Prépare la base de données SQLite en mémoire
   script:
