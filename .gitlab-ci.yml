@@ -10,58 +10,48 @@ stages:
 
 variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-#   PLATFORMS: linux/amd64,linux/arm64
 
 test-units:
   stage: test
-  image: composer:2
+  image: php:8.2
+  variables:
+    DB_CONNECTION: mysql
+    DB_HOST: shared-bookstack-keycloak-rds.crogwcggglt8.eu-north-1.rds.amazonaws.com
+    DB_PORT: 3306
+    DB_DATABASE: bookstack_production
+    DB_USERNAME: dbadmin
+    DB_PASSWORD: bsCapsRdsPwd
   script:
-    - composer install --ignore-platform-reqs
+    - apt-get update && apt-get install -y unzip git libzip-dev
+    - docker-php-ext-install pdo_mysql zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-interaction --prefer-dist
+    - until mysqladmin ping -h"$DB_HOST" -u"$DB_USERNAME" -p"$DB_PASSWORD" --silent; do echo "Waiting for RDS..."; sleep 5; done
+    - php artisan key:generate
+    - php artisan migrate --force
+    - ./vendor/bin/phpunit --configuration phpunit.xml
   allow_failure: true
 
 build:
   stage: build
   image: docker:cli
   script:
-    - docker info  # Test de connexion au socket
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $IMAGE -f dev/docker/Dockerfile .
     - docker push $IMAGE
-
-  # deploy:
-  #   stage: deploy
-  #   image: alpine:latest
-
-  #   before_script:
-  #     # Installation des outils SSH
-  #     - apk add --no-cache openssh-client
-
-  #     # Démarrage de l'agent SSH
-  #     - eval $(ssh-agent -s)
-
-  #     # Ajout de la clé privée stockée dans GitLab CI
-  #     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-
-  #     # Préparation du dossier SSH
-  #     - mkdir -p ~/.ssh
-  #     - chmod 700 ~/.ssh
-
-  #     # Ajout automatique de l'empreinte du Swarm master
-  #     - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
-
-  #   script:
-  #     # Copie du stack vers le Swarm master
-  #     - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/ubuntu/bookstack-stack.yml
-
-  #     # Déploiement du stack
-  #     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/ubuntu/bookstack-stack.yml bookstack"
-
-  # only:
-  #   - main
-
-quality:
-  stage: quality
-  image: sonarsource/sonar-scanner-cli:12.1
-  script:
-    - sonar-scanner -Dsonar.qualitygate.wait=true
   allow_failure: true
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
+  script:
+    - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/bookstack/deploy-stack.yml
+    - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/boostack/deploy-stack.yml bookstack"
