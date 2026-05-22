@@ -22,13 +22,18 @@ unit-test:
     DB_CONNECTION: sqlite
     DB_DATABASE: ":memory:"
   before_script:
-    - apt-get update && apt-get install -y libpng-dev libzip-dev zip unzip libicu-dev
-    - docker-php-ext-install gd zip pdo_sqlite intl
-    # Installation explicite de Composer
+    # --- AJOUTEZ libsqlite3-dev ICI ---
+    - apt-get update && apt-get install -y libpng-dev libzip-dev zip unzip libicu-dev libsqlite3-dev
+    - docker-php-ext-install gd zip pdo_mysql pdo_sqlite intl
+
+    # Installation de Composer
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-  script:
     - composer install --prefer-dist --no-interaction
-    - php artisan migrate
+
+    # Préparation
+    - cp .env.example .env
+    - php artisan key:generate
+  script:
     - php artisan test
 
 # build:
