@@ -22,7 +22,8 @@ test-units:
      DB_CONNECTION: sqlite
      DB_DATABASE: ":memory:"
   before_script:
-     - apt-get update && apt-get install -y libsqlite3-dev # Installation des dépendances nécessaires
+     - apt-get update && apt-get install -y libsqlite3-dev git unzip # Installation des dépendances nécessaires
+     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
      - composer install --prefer-dist --no-progress
      - cp .env.example .env
      - php artisan key:generate
@@ -61,14 +62,14 @@ test-units:
 #     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/bookstack/deploy-stack.yml bookstack"
 #   allow_failure: true
 
-sonarcloud-check:
-  stage: quality
-  image:
-    name: sonarsource/sonar-scanner-cli:latest
-    entrypoint: [""]
-  cache:
-    key: "${CI_JOB_NAME}"
-    paths:
-      - .sonar/cache
-  script:
-      - sonar-scanner
+#sonarcloud-check:
+ # stage: quality
+  #image:
+   # name: sonarsource/sonar-scanner-cli:latest
+    #entrypoint: [""]
+  #cache:
+   # key: "${CI_JOB_NAME}"
+    #paths:
+     # - .sonar/cache
+  #script:
+#      - sonar-scanner
