@@ -50,4 +50,4 @@ RUN echo "<Directory /app/public>\n\
     && a2enconf bookstack
 
 # Permissions
-RUN chown -R www-data:www-data /app
+# RUN chown -R www-data:www-data /app
