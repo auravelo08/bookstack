@@ -5,7 +5,7 @@ default:
 stages:
   # - quality
   # - test
-  # - build
+  - build
   - deploy
 
 variables:
