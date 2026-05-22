@@ -15,22 +15,15 @@ test-units:
   stage: test
   image: php:8.2
   variables:
-    DB_CONNECTION: mysql
-    DB_HOST: shared-bookstack-keycloak-rds.crogwcggglt8.eu-north-1.rds.amazonaws.com
-    DB_PORT: 3306
-    DB_DATABASE: bookstack_production
-    DB_USERNAME: dbadmin
-    DB_PASSWORD: bsCapsRdsPwd
+    # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
+    DB_CONNECTION: sqlite
+    DB_DATABASE: ":memory:"
+  before_script:
+    - apt-get update && apt-get install -y libsqlite3-dev # Installation des dépendances nécessaires
+    - composer install --prefer-dist --no-progress
+    - php artisan migrate # Prépare la base de données SQLite en mémoire
   script:
-    - apt-get update && apt-get install -y unzip git libzip-dev libpng-dev libjpeg-dev libfreetype6-dev
-    - docker-php-ext-configure gd --with-freetype --with-jpeg
-    - docker-php-ext-install gd pdo_mysql zip
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    - composer install --no-interaction --prefer-dist
-    - until mysqladmin ping -h"$DB_HOST" -u"$DB_USERNAME" -p"$DB_PASSWORD" --silent; do echo "Waiting for RDS..."; sleep 5; done
-    - php artisan key:generate
-    - php artisan migrate --force
-    - ./vendor/bin/phpunit --configuration phpunit.xml
+    - php artisan test
   allow_failure: true
 
 build:
