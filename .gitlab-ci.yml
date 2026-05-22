@@ -52,6 +52,6 @@ deploy:
     - chmod 700 ~/.ssh
     - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
   script:
-    - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/bookstack/deploy-stack.yml
+    - scp docker-compose.yml ubuntu@$SWARM_MANAGER_IP:/home/bookstack/deploy-stack.yml
     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/bookstack/deploy-stack.yml bookstack"
   allow_failure: true
