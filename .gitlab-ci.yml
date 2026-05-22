@@ -29,7 +29,7 @@ unit-test:
     - apt-get update && apt-get install -y libpng-dev libzip-dev zip unzip libicu-dev git
     - docker-php-ext-install gd zip pdo_mysql intl
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    - composer install --prefer-source --no-interaction
+    - composer install --prefer-dist --no-interaction --no-progress
     - cp .env.example .env
     - php artisan key:generate
   script:
