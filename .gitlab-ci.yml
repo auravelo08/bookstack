@@ -44,8 +44,6 @@ deploy:
     - chmod 700 ~/.ssh
     - echo "$SWARM_KNOWN_HOSTS" >> ~/.ssh/known_hosts # Mieux : stocker l'empreinte en variable
   script:
-    - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/ubuntu/docker-stack.yml
-    # Suppression du service update, stack deploy est suffisant
-    - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy --with-registry-auth -c /home/ubuntu/docker-stack.yml bookstack"
-    # Vérification simple du statut
+    - scp -o StrictHostKeyChecking=accept-new docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/ubuntu/docker-stack.yml # Suppression du service update, stack deploy est suffisant
+    - ssh -o StrictHostKeyChecking=accept-new ubuntu@$SWARM_MANAGER_IP "docker stack deploy --with-registry-auth -c /home/ubuntu/docker-stack.yml bookstack" # Vérification simple du statut
     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack ps bookstack --no-trunc"
