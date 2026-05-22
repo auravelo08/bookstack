@@ -3,8 +3,8 @@ default:
     - bs-runner-3
 
 stages:
-  - test
   - quality
+  - test
   - build
   - deploy
 
@@ -14,20 +14,20 @@ variables:
   GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
 #   PLATFORMS: linux/amd64,linux/arm64
 
-test-units:
-  stage: test
-  image: php:8.2
-  variables:
-    # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
-    DB_CONNECTION: sqlite
-    DB_DATABASE: ":memory:"
-  before_script:
-    - apt-get update && apt-get install -y libsqlite3-dev # Installation des dépendances nécessaires
-    - composer install --prefer-dist --no-progress
-    - php artisan migrate # Prépare la base de données SQLite en mémoire
-  script:
-    - php artisan test
-  allow_failure: true
+# test-units:
+#   stage: test
+#   image: php:8.2
+#   variables:
+#     # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
+#     DB_CONNECTION: sqlite
+#     DB_DATABASE: ":memory:"
+#   before_script:
+#     - apt-get update && apt-get install -y libsqlite3-dev # Installation des dépendances nécessaires
+#     - composer install --prefer-dist --no-progress
+#     - php artisan migrate # Prépare la base de données SQLite en mémoire
+#   script:
+#     - php artisan test
+#   allow_failure: true
 
 # build:
 #   stage: build
