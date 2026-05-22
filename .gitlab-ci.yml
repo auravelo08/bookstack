@@ -25,7 +25,7 @@ test-units:
      - composer install --prefer-dist --no-progress
      - cp .env.example .env
      - php artisan key:generate
-     - php artisan migrate # Prépare la base de données SQLite en mémoire
+     - php artisan migrate --force  # Prépare la base de données SQLite en mémoire
   script:
      - php artisan test
    #allow_failure: true
