@@ -16,14 +16,12 @@ variables:
 
 test-units:
   stage: test
-  image: php:8.2
+  image: webdevops/php:8.2
   variables:
      # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
      DB_CONNECTION: sqlite
      DB_DATABASE: ":memory:"
   before_script:
-     - apt-get update && apt-get install -y libsqlite3-dev git unzip # Installation des dépendances nécessaires
-     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
      - composer install --prefer-dist --no-progress
      - cp .env.example .env
      - php artisan key:generate
