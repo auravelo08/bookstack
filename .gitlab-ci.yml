@@ -30,7 +30,7 @@ test-units:
      - sed -i 's/^DB_DATABASE=.*/DB_DATABASE=:memory:/' .env
      - grep -q '^APP_KEY=' .env || echo 'APP_KEY=' >> .env
      - php artisan key:generate --force
-     - php artisan migrate --force  # Prépare la base de données SQLite en mémoire
+      # Prépare la base de données SQLite en mémoire
   script:
      - php artisan test
    #allow_failure: true
