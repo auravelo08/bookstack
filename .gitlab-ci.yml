@@ -3,32 +3,14 @@ default:
     - bs-runner-3
 
 stages:
-  # - quality
-  # - test
   - build
   - deploy
 
 variables:
   IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
   IMAGE_SHA: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
-  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
-  GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
-#   PLATFORMS: linux/amd64,linux/arm64
-
-# test-units:
-#   stage: test
-#   image: php:8.2
-#   variables:
-#     # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
-#     DB_CONNECTION: sqlite
-#     DB_DATABASE: ":memory:"
-#   before_script:
-#     - apt-get update && apt-get install -y libsqlite3-dev # Installation des dépendances nécessaires
-#     - composer install --prefer-dist --no-progress
-#     - php artisan migrate # Prépare la base de données SQLite en mémoire
-#   script:
-#     - php artisan test
-#   allow_failure: true
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  GIT_DEPTH: "0"
 
 build:
   stage: build
@@ -42,13 +24,19 @@ build:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
 
     - echo "📦 Pull cache image (if exists)"
-    - docker pull "$IMAGE" || true
+    - docker pull "$IMAGE_LATEST" || true
 
     - echo "🏗️ Build image with cache"
-    - docker build --cache-from "$IMAGE" -t "$IMAGE_LATEST" -t "$IMAGE_SHA" -f dev/docker/Dockerfile .
+    - docker build \
+      --cache-from "$IMAGE_LATEST" \
+      -t "$IMAGE_LATEST" \
+      -t "$IMAGE_SHA" \
+      -f dev/docker/Dockerfile \
+      .
 
-    - echo "⬆️ Push image"
-    - docker push "$IMAGE"
+    - echo "⬆️ Push images"
+    - docker push "$IMAGE_LATEST"
+    - docker push "$IMAGE_SHA"
 
 deploy:
   stage: deploy
@@ -76,15 +64,3 @@ deploy:
 
     - echo "📦 Stack status"
     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack ps bookstack"
-
-# sonarcloud-check:
-#   stage: quality
-#   image:
-#     name: sonarsource/sonar-scanner-cli:latest
-#     entrypoint: [""]
-#   cache:
-#     key: "${CI_JOB_NAME}"
-#     paths:
-#       - .sonar/cache
-#   script:
-#       - sonar-scanner
