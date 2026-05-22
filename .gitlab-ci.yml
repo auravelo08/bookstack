@@ -3,8 +3,8 @@ default:
     - bs-runner-3
 
 stages:
-  - quality
   - test
+  - quality
   - build
   - deploy
 
@@ -29,35 +29,35 @@ test-units:
     - php artisan test
   allow_failure: true
 
-build:
-  stage: build
-  image: docker:24
-  services:
-    - name: docker:24-dind
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-  script:
-    - docker image prune -f
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-    - docker pull "$IMAGE" || true
-    - docker build --cache-from "$IMAGE" -t "$IMAGE" -f dev/docker/Dockerfile .
-    - docker push "$IMAGE"
-  allow_failure: true
+# build:
+#   stage: build
+#   image: docker:24
+#   services:
+#     - name: docker:24-dind
+#   variables:
+#     DOCKER_TLS_CERTDIR: ""
+#   script:
+#     - docker image prune -f
+#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+#     - docker pull "$IMAGE" || true
+#     - docker build --cache-from "$IMAGE" -t "$IMAGE" -f dev/docker/Dockerfile .
+#     - docker push "$IMAGE"
+#   allow_failure: true
 
-deploy:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
-  script:
-    - scp docker-compose.yml ubuntu@$SWARM_MANAGER_IP:/home/bookstack/deploy-stack.yml
-    - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/bookstack/deploy-stack.yml bookstack"
-  allow_failure: true
+# deploy:
+#   stage: deploy
+#   image: alpine:latest
+#   before_script:
+#     - apk add --no-cache openssh-client
+#     - eval $(ssh-agent -s)
+#     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+#     - mkdir -p ~/.ssh
+#     - chmod 700 ~/.ssh
+#     - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
+#   script:
+#     - scp docker-compose.yml ubuntu@$SWARM_MANAGER_IP:/home/bookstack/deploy-stack.yml
+#     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/bookstack/deploy-stack.yml bookstack"
+#   allow_failure: true
 
 sonarcloud-check:
   stage: quality
