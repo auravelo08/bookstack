@@ -5,22 +5,17 @@ services:
       - PUID=1000
       - PGID=1000
       - APP_URL=http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com
-
-      # Database
       - DB_CONNECTION=mysql
       - DB_HOST=shared-bookstack-keycloak-rds.crogwcggglt8.eu-north-1.rds.amazonaws.com
       - DB_PORT=3306
       - DB_DATABASE=bookstack_production
       - DB_USERNAME=dbadmin
-      - DB_PASSWORD=bsCapsRdsPwd
-
-      # App key
-      - APP_KEY=base64:71iz6TD94TrxLUohQmwVYkRuVs5SiB95C1qTsAog4aY=
-
-      # S3 storage
+      - DB_PASSWORD=$DB_PASSWORD
+      - SESSION_DRIVER=database
+      - APP_KEY=$APP_KEY
       - STORAGE_TYPE=s3
-      - STORAGE_S3_KEY=AKIA5Q23ERCMSBP2OUN6
-      - STORAGE_S3_SECRET=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
+      - STORAGE_S3_KEY=$S3_KEY
+      - STORAGE_S3_SECRET=$S3_SECRET
       - STORAGE_S3_BUCKET=bookstack-prod-bookstack
       - STORAGE_S3_REGION=eu-north-1
       - STORAGE_S3_ENDPOINT=https://s3.eu-north-1.amazonaws.com
@@ -34,12 +29,9 @@ services:
       - bookstack_config:/config
 
     deploy:
-      replicas: 1
+      mode: global
       restart_policy:
         condition: on-failure
-      placement:
-        constraints:
-          - node.role == manager
 
 volumes:
   bookstack_config:
