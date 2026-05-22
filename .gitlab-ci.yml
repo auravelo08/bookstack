@@ -67,7 +67,7 @@ locust:
   #   - npm install  # Installation des dépendances du projet
   #   - sleep 5 # Attente pour s'assurer que le serveur est prêt avant de lancer les tests
   script:
-    - pip3 install locust  # Installation de Locust
+    - pip3 install locust beautifulsoup4  # Installation de Locust et Installation de BeautifulSoup pour le parsing HTML (si nécessaire)
     # - npm start > /dev/null &  # Démarrage du serveur en arrière-plan (silencieux) 
     - locust --headless -f locustfile.py --users 100 --spawn-rate 20 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary  # Test de montée en charge
 
