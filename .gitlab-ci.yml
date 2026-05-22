@@ -44,10 +44,7 @@ build:
     - docker pull "$IMAGE" || true
 
     - echo "🏗️ Build image with cache"
-    - docker build \
-      --cache-from "$IMAGE" \
-      -t "$IMAGE" \
-      -f dev/docker/Dockerfile .
+    - docker build --cache-from "$IMAGE" -t "$IMAGE" -f dev/docker/Dockerfile .
 
     - echo "⬆️ Push image"
     - docker push "$IMAGE"
