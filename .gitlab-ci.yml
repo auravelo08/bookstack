@@ -5,6 +5,8 @@ default:
 stages:
   - build
   - deploy
+  - quality
+  - load-testing
 
 variables:
   IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
@@ -50,3 +52,15 @@ deploy:
       rm /home/ubuntu/.env
       "
     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack ps bookstack --no-trunc"
+
+sonarcloud-check:
+  stage: quality
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script:
+    - sonar-scanner
