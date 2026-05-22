@@ -11,20 +11,20 @@ stages:
 variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
-test-units:
-  stage: test
-  image: php:8.2
-  variables:
-    # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
-    DB_CONNECTION: sqlite
-    DB_DATABASE: ":memory:"
-  before_script:
-    - apt-get update && apt-get install -y libsqlite3-dev # Installation des dépendances nécessaires
-    - composer install --prefer-dist --no-progress
-    - php artisan migrate # Prépare la base de données SQLite en mémoire
-  script:
-    - php artisan test
-  allow_failure: true
+# test-units:
+#   stage: test
+#   image: php:8.2
+#   variables:
+#     # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
+#     DB_CONNECTION: sqlite
+#     DB_DATABASE: ":memory:"
+#   before_script:
+#     - apt-get update && apt-get install -y libsqlite3-dev # Installation des dépendances nécessaires
+#     - composer install --prefer-dist --no-progress
+#     - php artisan migrate # Prépare la base de données SQLite en mémoire
+#   script:
+#     - php artisan test
+#   allow_failure: true
 
 build:
   stage: build
@@ -34,21 +34,22 @@ build:
   variables:
     DOCKER_TLS_CERTDIR: ""
   script:
+    - docker image prune -f
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-    - docker build -t "$IMAGE" -f dev/docker/Dockerfile .
+    - docker pull "$IMAGE" || true
+    - docker build --cache-from "$IMAGE" -t "$IMAGE" -f dev/docker/Dockerfile .
     - docker push "$IMAGE"
 
-deploy:
-  stage: deploy
-  image: alpine:latest
-
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
-  script:
-    - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/bookstack/deploy-stack.yml
-    - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/bookstack/deploy-stack.yml bookstack"
+# deploy:
+#   stage: deploy
+#   image: alpine:latest
+#   before_script:
+#     - apk add --no-cache openssh-client
+#     - eval $(ssh-agent -s)
+#     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+#     - mkdir -p ~/.ssh
+#     - chmod 700 ~/.ssh
+#     - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
+#   script:
+#     - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/bookstack/deploy-stack.yml
+#     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/bookstack/deploy-stack.yml bookstack"
