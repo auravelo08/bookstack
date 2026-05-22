@@ -1,6 +1,6 @@
 FROM php:8.3-apache
 
-# Install system dependencies
+# Install additional dependencies
 RUN apt-get update && \
     apt-get install -y \
         git \
@@ -25,22 +25,17 @@ RUN docker-php-ext-configure ldap --with-libdir="lib/$(gcc -dumpmachine)" && \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 ENV APACHE_DOCUMENT_ROOT="/app/public"
+
 WORKDIR /app
 
-# Copy dependency files first (cache-friendly)
-COPY composer.json composer.lock package.json package-lock.json /app/
+# Copy BookStack code
+COPY . /app
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Install JS dependencies
-RUN npm install
-
-# Copy the rest of the application
-COPY --chown=www-data:www-data . /app
-
 # Build frontend assets
-RUN npm run build
+RUN npm install && npm run build
 
 # Configure Apache
 RUN a2enmod rewrite && \
@@ -54,5 +49,5 @@ RUN echo "<Directory /app/public>\n\
 </Directory>" > /etc/apache2/conf-available/bookstack.conf \
     && a2enconf bookstack
 
-# Fix writable directories only
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
+# Permissions
+# RUN chown -R www-data:www-data /app

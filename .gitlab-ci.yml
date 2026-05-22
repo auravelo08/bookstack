@@ -9,7 +9,8 @@ stages:
   - deploy
 
 variables:
-  IMAGE: "$CI_REGISTRY_IMAGE:latest"
+  IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
+  IMAGE_SHA: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
   GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
 #   PLATFORMS: linux/amd64,linux/arm64
@@ -44,7 +45,7 @@ build:
     - docker pull "$IMAGE" || true
 
     - echo "🏗️ Build image with cache"
-    - docker build --cache-from "$IMAGE" -t "$IMAGE" -f dev/docker/Dockerfile .
+    - docker build --cache-from "$IMAGE" -t "$IMAGE_LATEST" -t "$IMAGE_SHA" -f dev/docker/Dockerfile .
 
     - echo "⬆️ Push image"
     - docker push "$IMAGE"
