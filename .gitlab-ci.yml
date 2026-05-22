@@ -11,20 +11,20 @@ stages:
 variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
-# test-units:
-#   stage: test
-#   image: php:8.2
-#   variables:
-#     # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
-#     DB_CONNECTION: sqlite
-#     DB_DATABASE: ":memory:"
-#   before_script:
-#     - apt-get update && apt-get install -y libsqlite3-dev # Installation des dépendances nécessaires
-#     - composer install --prefer-dist --no-progress
-#     - php artisan migrate # Prépare la base de données SQLite en mémoire
-#   script:
-#     - php artisan test
-#   allow_failure: true
+test-units:
+  stage: test
+  image: php:8.2
+  variables:
+    # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
+    DB_CONNECTION: sqlite
+    DB_DATABASE: ":memory:"
+  before_script:
+    - apt-get update && apt-get install -y libsqlite3-dev # Installation des dépendances nécessaires
+    - composer install --prefer-dist --no-progress
+    - php artisan migrate # Prépare la base de données SQLite en mémoire
+  script:
+    - php artisan test
+  allow_failure: true
 
 build:
   stage: build
@@ -39,6 +39,7 @@ build:
     - docker pull "$IMAGE" || true
     - docker build --cache-from "$IMAGE" -t "$IMAGE" -f dev/docker/Dockerfile .
     - docker push "$IMAGE"
+  allow_failure: true
 
 deploy:
   stage: deploy
@@ -53,3 +54,4 @@ deploy:
   script:
     - scp docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/bookstack/deploy-stack.yml
     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/bookstack/deploy-stack.yml bookstack"
+  allow_failure: true

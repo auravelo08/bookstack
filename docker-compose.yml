@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   bookstack:
     image: registry.gitlab.com/capsule-bookstack/bookstack:f1bf8f4d
