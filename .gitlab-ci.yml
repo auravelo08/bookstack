@@ -3,6 +3,7 @@ default:
     - bs-runner-3
 
 stages:
+  - load-testing
   - quality
   - test
   - build
@@ -59,14 +60,25 @@ variables:
 #     - ssh ubuntu@$SWARM_MANAGER_IP "docker stack deploy -c /home/bookstack/deploy-stack.yml bookstack"
 #   allow_failure: true
 
-sonarcloud-check:
-  stage: quality
-  image:
-    name: sonarsource/sonar-scanner-cli:latest
-    entrypoint: [""]
-  cache:
-    key: "${CI_JOB_NAME}"
-    paths:
-      - .sonar/cache
+locust:
+  stage: load-testing  # Étape unique pour le test de montée en charge
+  image: python:3.11-slim  # Image Python légère suffisante pour Locust
+  # before_script:
+  #   - npm install  # Installation des dépendances du projet
+  #   - sleep 5 # Attente pour s'assurer que le serveur est prêt avant de lancer les tests
   script:
-      - sonar-scanner
+    - pip3 install locust  # Installation de Locust
+    # - npm start > /dev/null &  # Démarrage du serveur en arrière-plan (silencieux) 
+    - locust --headless -f locustfile.py --users 100 --spawn-rate 20 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com/ -t 5s --only-summary  # Test de montée en charge
+
+# sonarcloud-check:
+#   stage: quality
+#   image:
+#     name: sonarsource/sonar-scanner-cli:latest
+#     entrypoint: [""]
+#   cache:
+#     key: "${CI_JOB_NAME}"
+#     paths:
+#       - .sonar/cache
+#   script:
+#       - sonar-scanner
