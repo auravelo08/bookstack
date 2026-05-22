@@ -1,6 +1,6 @@
 services:
   bookstack:
-    image: registry.gitlab.com/capsule-bookstack/bookstack:4d424063
+    image: registry.gitlab.com/capsule-bookstack/bookstack:latest
     environment:
       - PUID=1000
       - PGID=1000
