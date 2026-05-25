@@ -17,4 +17,4 @@ class BookStackUser(HttpUser):
 
     @task
     def read_page(self):
-        self.client.get("/")  # page d'accueil  # quelle URL pour lire une page ?
+        self.client.get("/shelves")  # page qui amènes aux étagères
