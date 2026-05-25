@@ -19,26 +19,33 @@ unit-test:
   stage: units-test
   image: php:8.2-fpm
   variables:
-    # On définit les variables ici
-    APP_ENV: testing           # <--- AJOUTER CECI
+    APP_ENV: testing
     DB_CONNECTION: mysql
     DB_HOST: shared-bookstack-keycloak-rds.crogwcggglt8.eu-north-1.rds.amazonaws.com
     DB_PORT: 3306
     DB_DATABASE: bookstack_test
     DB_USERNAME: dbadmin
-    DB_PASSWORD: $DB_PASSWORD
-    APP_KEY: $APP_KEY
+    # Assure-toi que DB_PASSWORD et APP_KEY sont bien définis dans GitLab CI/CD Settings
   before_script:
     - apt-get update && apt-get install -y libpng-dev libzip-dev zip unzip libicu-dev git
     - docker-php-ext-install gd zip pdo_mysql intl
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     - composer install --prefer-dist --no-interaction --no-progress
-    # On ne fait PAS de "cp .env.example .env"
-    # On crée un fichier .env vide ou on laisse Laravel utiliser les variables système
-    - touch .env
-    - php artisan key:generate
+
+    # CRÉATION DYNAMIQUE DU .env (Indispensable pour Laravel en CLI)
+    - |
+      echo "APP_ENV=$APP_ENV" > .env
+      echo "APP_KEY=$APP_KEY" >> .env
+      echo "DB_CONNECTION=$DB_CONNECTION" >> .env
+      echo "DB_HOST=$DB_HOST" >> .env
+      echo "DB_PORT=$DB_PORT" >> .env
+      echo "DB_DATABASE=$DB_DATABASE" >> .env
+      echo "DB_USERNAME=$DB_USERNAME" >> .env
+      echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+
   script:
-    # Laravel va lire les variables d'environnement du conteneur en priorité
+    # On efface le cache au cas où une ancienne config traînerait
+    - php artisan config:clear
     - php artisan migrate:fresh --force
     - php artisan test
 
