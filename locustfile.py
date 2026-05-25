@@ -5,15 +5,16 @@ class BookStackUser(HttpUser):
     wait_time = between(1, 3)  # attente entre chaque action
 
     def on_start(self):
-        response = self.client.get("/login")
+        response = self.client.get("/login") 
         soup = BeautifulSoup(response.text, "html.parser")
-        token = soup.find("input", {"name": "_token"})["value"]
+        token_input = soup.find("input", {"name": "_token"}) 
         # appelé une fois au démarrage de chaque utilisateur
-        self.client.post("/login", {
-            "email": "admin@admin.com",
-            "password": "password",
-            "_token": token
-        })
+        if token_input: 
+            self.client.post("/login", {
+                "email": "admin@admin.com",
+                "password": "password",
+                "_token": token_input["value"]
+            })
 
     @task
     def read_page(self):
