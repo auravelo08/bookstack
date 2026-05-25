@@ -72,8 +72,9 @@ deploy:
     - echo "[INFO] Preparing remote deploy directory..."
     - ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" '
       set -e
-      sudo mkdir -p /home/ubuntu/deploy &&
-      sudo chown ubuntu:ubuntu /home/ubuntu/deploy
+      sudo mkdir -p /home/ubuntu/deploy
+      sudo chown -R ubuntu:ubuntu /home/ubuntu/deploy
+      sudo chmod -R 755 /home/ubuntu/deploy
       '
 
     # 2) Upload du stack file
