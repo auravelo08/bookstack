@@ -32,7 +32,7 @@ WORKDIR /app
 COPY . /app
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN COMPOSER_PROCESS_TIMEOUT=600 composer install --no-dev --optimize-autoloader
 
 # Build frontend assets
 RUN npm install && npm run build
