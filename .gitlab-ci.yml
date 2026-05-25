@@ -17,7 +17,7 @@ variables:
 
 unit-test:
   stage: units-test
-  image: registry.gitlab.com/capsule-bookstack/php-ci:8.2   # Ton image optimisée
+  image: registry.gitlab.com/capsule-bookstack/bookstack/php-ci:8.2   # Ton image optimisée
   variables:
     APP_ENV: testing
     DB_CONNECTION: mysql
