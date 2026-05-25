@@ -17,7 +17,7 @@ variables:
 
 unit-test:
   stage: units-test
-  image: php:8.2-fpm
+  image: registry.gitlab.com/capsule-bookstack/php-ci:8.2   # Ton image optimisée
   variables:
     APP_ENV: testing
     DB_CONNECTION: mysql
@@ -25,27 +25,19 @@ unit-test:
     DB_PORT: 3306
     DB_DATABASE: bookstack_test
     DB_USERNAME: dbadmin
-    # Assure-toi que DB_PASSWORD et APP_KEY sont bien définis dans GitLab CI/CD Settings
-  before_script:
-    - apt-get update && apt-get install -y libpng-dev libzip-dev zip unzip libicu-dev git
-    - docker-php-ext-install gd zip pdo_mysql intl
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    - composer install --prefer-dist --no-interaction --no-progress
 
-    # CRÉATION DYNAMIQUE DU .env (Indispensable pour Laravel en CLI)
-    - |
-      echo "APP_ENV=$APP_ENV" > .env
-      echo "APP_KEY=$APP_KEY" >> .env
-      echo "DB_CONNECTION=$DB_CONNECTION" >> .env
-      echo "DB_HOST=$DB_HOST" >> .env
-      echo "DB_PORT=$DB_PORT" >> .env
-      echo "DB_DATABASE=$DB_DATABASE" >> .env
-      echo "DB_USERNAME=$DB_USERNAME" >> .env
-      echo "DB_PASSWORD=\"$DB_PASSWORD\"" >> .env
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - vendor/
+      - ~/.composer/cache/
+
+  before_script:
+    - composer install --prefer-dist --no-interaction --no-progress
 
   script:
     - php artisan config:clear
-    - php artisan migrate:fresh --seed --force
+    - php artisan migrate --force
     - php artisan test --filter Tests/Activity/AuditLogApiTest.php
 
 # build:
