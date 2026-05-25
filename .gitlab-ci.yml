@@ -19,6 +19,7 @@ unit-test:
   stage: units-test
   image: php:8.2-fpm
   variables:
+    # On définit les variables ici
     DB_CONNECTION: mysql
     DB_HOST: shared-bookstack-keycloak-rds.crogwcggglt8.eu-north-1.rds.amazonaws.com
     DB_PORT: 3306
@@ -30,9 +31,12 @@ unit-test:
     - docker-php-ext-install gd zip pdo_mysql intl
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     - composer install --prefer-dist --no-interaction --no-progress
-    - cp .env.example .env
+    # On ne fait PAS de "cp .env.example .env"
+    # On crée un fichier .env vide ou on laisse Laravel utiliser les variables système
+    - touch .env
     - php artisan key:generate
   script:
+    # Laravel va lire les variables d'environnement du conteneur en priorité
     - php artisan migrate:fresh --force
     - php artisan test
 
