@@ -46,7 +46,7 @@ unit-test:
   script:
     - php artisan config:clear
     - php artisan migrate:fresh --seed --force
-    - php -d memory_limit=512M artisan test --filter Tests/Activity/AuditLogApiTest
+    - php artisan test --filter Tests/Activity/AuditLogApiTest.php
 
 # build:
 #   stage: build
