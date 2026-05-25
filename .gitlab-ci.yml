@@ -12,43 +12,49 @@ variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
   GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
-# PLATFORMS: linux/amd64,linux/arm64
+  PLATFORMS: linux/amd64,linux/arm64
 
-test-units:
-  stage: test
-  image: webdevops/php:8.2
-  variables:
+#test-units:
+ # stage: test
+  #image: webdevops/php:8.2
+  #variables:
      # Utilisation de SQLite en mémoire pour la rapidité et l'isolation
-     DB_CONNECTION: sqlite
-     DB_DATABASE: ":memory:"
-     APP_ENV: testing
-  before_script:
-     - composer install --prefer-dist --no-progress
-     - cp .env.example .env
-     - sed -i 's/^APP_ENV=.*/APP_ENV=testing/' .env
-     - sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
-     - sed -i 's/^DB_DATABASE=.*/DB_DATABASE=:memory:/' .env
-     - grep -q '^APP_KEY=' .env || echo 'APP_KEY=' >> .env
-     - php artisan key:generate --force
+   #  DB_CONNECTION: sqlite
+    # DB_DATABASE: ":memory:"
+     #APP_ENV: testing
+  #before_script:
+    # - composer install --prefer-dist --no-progress
+    # - cp .env.example .env
+    # - sed -i 's/^APP_ENV=.*/APP_ENV=testing/' .env
+    # - sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+    # - sed -i 's/^DB_DATABASE=.*/DB_DATABASE=:memory:/' .env
+    # - grep -q '^APP_KEY=' .env || echo 'APP_KEY=' >> .env
+    # - php artisan key:generate --force
       # Prépare la base de données SQLite en mémoire
-  script:
-     - php artisan test
+  #script:
+    # - php artisan test
    #allow_failure: true
 
-# build:
-#   stage: build
-#   image: docker:24
-#   services:
-#     - name: docker:24-dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: ""
-#   script:
-#     - docker image prune -f
-#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-#     - docker pull "$IMAGE" || true
-#     - docker build --cache-from "$IMAGE" -t "$IMAGE" -f dev/docker/Dockerfile .
-#     - docker push "$IMAGE"
-#   allow_failure: true
+build:
+  stage: build
+  image: docker:24
+  services:
+    - name: docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+
+  before_script:
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - docker buildx create --name builder --use
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  script:
+    - docker buildx build
+        --platform linux/amd64,linux/arm64
+        -t "$IMAGE"
+        -f dev/docker/Dockerfile
+        --push
+        .
+  allow_failure: true
 
 # deploy:
 #   stage: deploy
@@ -76,3 +82,4 @@ test-units:
      # - .sonar/cache
   #script:
 #      - sonar-scanner
+
