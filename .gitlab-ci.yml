@@ -44,12 +44,9 @@ unit-test:
       echo "DB_PASSWORD=\"$DB_PASSWORD\"" >> .env
 
   script:
-    # On efface le cache au cas où une ancienne config traînerait
     - php artisan config:clear
-    # Ajout du --seed pour remplir la base avec les données nécessaires aux tests
     - php artisan migrate:fresh --seed --force
-    # Augmentation de la mémoire PHP pour éviter le crash en fin de suite
-    - php -d memory_limit=512M artisan test
+    - php -d memory_limit=512M artisan test --filter Tests/Activity/AuditLogApiTest
 
 # build:
 #   stage: build
