@@ -54,27 +54,57 @@ build:
 deploy:
   stage: deploy
   image: alpine:latest
+
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+
   before_script:
     - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
+    - eval "$(ssh-agent -s)"
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - echo "$SWARM_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+
   script:
-    - scp -o StrictHostKeyChecking=accept-new docker-stack.yml ubuntu@$SWARM_MANAGER_IP:/home/ubuntu/docker-stack.yml
-    - >
-      ssh -o StrictHostKeyChecking=accept-new ubuntu@$SWARM_MANAGER_IP "
-      echo 'DB_PASSWORD=${DB_PASSWORD}' > /home/ubuntu/.env
-      echo 'STORAGE_S3_SECRET=${STORAGE_S3_SECRET}' >> /home/ubuntu/.env
-      echo 'APP_KEY=${APP_KEY}' >> /home/ubuntu/.env
-      echo 'S3_KEY=${S3_KEY}' >> /home/ubuntu/.env
-      docker stack deploy --with-registry-auth -c /home/ubuntu/docker-stack.yml bookstack
-      rm /home/ubuntu/.env
+    # 1) Préparation du dossier de déploiement
+    - echo "[INFO] Preparing remote deploy directory..."
+    - ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" '
+      set -e
+      sudo mkdir -p /home/ubuntu/deploy &&
+      sudo chown ubuntu:ubuntu /home/ubuntu/deploy
+      '
+
+    # 2) Upload du stack file
+    - echo "[INFO] Uploading docker-stack.yml..."
+    - scp -o StrictHostKeyChecking=accept-new docker-stack.yml ubuntu@"$SWARM_MANAGER_IP":/home/ubuntu/deploy/docker-stack.yml
+
+    # 3) Génération du fichier .env côté Swarm manager
+    - echo "[INFO] Creating .env file on remote..."
+    - ssh ubuntu@"$SWARM_MANAGER_IP" "
+      set -e
+      echo 'DB_PASSWORD=${DB_PASSWORD}' > /home/ubuntu/deploy/.env
+      echo 'STORAGE_S3_SECRET=${STORAGE_S3_SECRET}' >> /home/ubuntu/deploy/.env
+      echo 'APP_KEY=${APP_KEY}' >> /home/ubuntu/deploy/.env
+      echo 'S3_KEY=${S3_KEY}' >> /home/ubuntu/deploy/.env
       "
-    - ssh ubuntu@$SWARM_MANAGER_IP "docker stack ps bookstack --no-trunc"
+
+    # 4) Déploiement du stack
+    - echo "[INFO] Deploying stack..."
+    - ssh ubuntu@"$SWARM_MANAGER_IP" "
+      set -e
+      docker stack deploy --with-registry-auth \
+      -c /home/ubuntu/deploy/docker-stack.yml \
+      bookstack
+      "
+
+    # 5) Nettoyage du .env
+    - echo "[INFO] Cleaning .env..."
+    - ssh ubuntu@"$SWARM_MANAGER_IP" "rm -f /home/ubuntu/deploy/.env"
+
+    # 6) Vérification du déploiement
+    - echo "[INFO] Checking stack status..."
+    - ssh ubuntu@"$SWARM_MANAGER_IP" "docker stack ps bookstack --no-trunc"
 
 locust:
   stage: load-testing
