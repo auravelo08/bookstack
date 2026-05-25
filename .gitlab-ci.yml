@@ -3,6 +3,7 @@ default:
     - bs-runner-3
 
 stages:
+  - units-test
   - build
   - deploy
   - quality
@@ -13,6 +14,28 @@ variables:
   IMAGE_SHA: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   GIT_DEPTH: "0"
+
+unit-test:
+  stage: units-test
+  image: registry.gitlab.com/capsule-bookstack/bookstack/php-ci:8.2 # Ton image optimisée
+  variables:
+    APP_ENV: testing
+    DB_CONNECTION: mysql
+    DB_HOST: shared-bookstack-keycloak-rds.crogwcggglt8.eu-north-1.rds.amazonaws.com
+    DB_PORT: 3306
+    DB_DATABASE: bookstack_test
+    DB_USERNAME: dbadmin
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - vendor/
+      - ~/.composer/cache/
+  before_script:
+    - composer install --prefer-dist --no-interaction --no-progress
+  script:
+    - php artisan config:clear
+    - php artisan migrate --force
+    - php artisan test --filter Tests/Activity/AuditLogApiTest.php
 
 build:
   stage: build
@@ -70,4 +93,4 @@ sonarcloud-check:
     paths:
       - .sonar/cache
   script:
-      - sonar-scanner
+    - sonar-scanner
