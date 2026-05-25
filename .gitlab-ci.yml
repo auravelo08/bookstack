@@ -27,6 +27,7 @@ unit-test:
     DB_DATABASE: bookstack_test
     DB_USERNAME: dbadmin
     DB_PASSWORD: $DB_PASSWORD
+    APP_KEY: $APP_KEY
   before_script:
     - apt-get update && apt-get install -y libpng-dev libzip-dev zip unzip libicu-dev git
     - docker-php-ext-install gd zip pdo_mysql intl
