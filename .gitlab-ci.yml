@@ -19,8 +19,9 @@ variables:
 
 gitleaks:
   stage: verify
-  image: zricethezav/gitleaks
-  entrypoint: [""]
+  image: 
+    name: zricethezav/gitleaks
+    entrypoint: [""]
   script:
     - gitleaks detect --source .
 
