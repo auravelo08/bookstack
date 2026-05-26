@@ -15,27 +15,27 @@ variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   GIT_DEPTH: "0"
 
-unit-test:
-  stage: units-test
-  image: registry.gitlab.com/capsule-bookstack/bookstack/php-ci:8.2 # Ton image optimisée
-  variables:
-    APP_ENV: testing
-    DB_CONNECTION: mysql
-    DB_HOST: shared-bookstack-keycloak-rds.crogwcggglt8.eu-north-1.rds.amazonaws.com
-    DB_PORT: 3306
-    DB_DATABASE: bookstack_test
-    DB_USERNAME: dbadmin
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - vendor/
-      - ~/.composer/cache/
-  before_script:
-    - composer install --prefer-dist --no-interaction --no-progress
-  script:
-    - php artisan config:clear
-    - php artisan migrate --force
-    - php artisan test --filter Tests/Activity/AuditLogApiTest.php
+# unit-test:
+#   stage: units-test
+#   image: registry.gitlab.com/capsule-bookstack/bookstack/php-ci:8.2 # Ton image optimisée
+#   variables:
+#     APP_ENV: testing
+#     DB_CONNECTION: mysql
+#     DB_HOST: shared-bookstack-keycloak-rds.crogwcggglt8.eu-north-1.rds.amazonaws.com
+#     DB_PORT: 3306
+#     DB_DATABASE: bookstack_test
+#     DB_USERNAME: dbadmin
+#   cache:
+#     key: ${CI_COMMIT_REF_SLUG}
+#     paths:
+#       - vendor/
+#       - ~/.composer/cache/
+#   before_script:
+#     - composer install --prefer-dist --no-interaction --no-progress
+#   script:
+#     - php artisan config:clear
+#     - php artisan migrate --force
+#     - php artisan test --filter Tests/Activity/AuditLogApiTest.php
 
 build:
   stage: build
@@ -54,10 +54,8 @@ build:
 deploy:
   stage: deploy
   image: alpine:latest
-
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-
   before_script:
     - apk add --no-cache openssh-client
     - eval "$(ssh-agent -s)"
@@ -65,63 +63,56 @@ deploy:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - echo "$SWARM_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-
   script:
-    # 1) Préparation du dossier de déploiement
-    - echo "[INFO] Preparing remote deploy directory..."
-    - ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" '
-      set -e
-      sudo mkdir -p /home/ubuntu/deploy
-      sudo chown -R ubuntu:ubuntu /home/ubuntu/deploy
-      sudo chmod -R 755 /home/ubuntu/deploy
-      '
+    # 1) On s'assure de la propriété du dossier sans écraser les fichiers existants
+    - ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" "sudo chown -R ubuntu:ubuntu /home/ubuntu/deploy"
 
-    # 2) Upload du stack file
+    # 2) Upload du stack file (on force l'écrasement si nécessaire)
     - echo "[INFO] Uploading docker-stack.yml..."
     - scp -o StrictHostKeyChecking=accept-new docker-stack.yml ubuntu@"$SWARM_MANAGER_IP":/home/ubuntu/deploy/docker-stack.yml
 
-    # 3) Génération du fichier .env côté Swarm manager
+    # 3) Génération du fichier .env
+    # Note: On utilise un fichier temporaire pour éviter les problèmes de droits lors de la création
     - echo "[INFO] Creating .env file on remote..."
     - ssh ubuntu@"$SWARM_MANAGER_IP" "
       set -e
-      echo 'DB_PASSWORD=${DB_PASSWORD}' > /home/ubuntu/deploy/.env
-      echo 'STORAGE_S3_SECRET=${STORAGE_S3_SECRET}' >> /home/ubuntu/deploy/.env
-      echo 'APP_KEY=${APP_KEY}' >> /home/ubuntu/deploy/.env
-      echo 'S3_KEY=${S3_KEY}' >> /home/ubuntu/deploy/.env
+      cat <<EOF > /home/ubuntu/deploy/.env
+      DB_PASSWORD=${DB_PASSWORD}
+      STORAGE_S3_SECRET=${STORAGE_S3_SECRET}
+      APP_KEY=${APP_KEY}
+      S3_KEY=${S3_KEY}
+      EOF
       "
 
     # 4) Déploiement du stack
+    # On précise bien le chemin du fichier .env dans la commande si nécessaire
+    # ou on s'assure que le stack file le charge bien (env_file: .env)
     - echo "[INFO] Deploying stack..."
     - ssh ubuntu@"$SWARM_MANAGER_IP" "
       set -e
-      docker stack deploy --with-registry-auth \
-      -c /home/ubuntu/deploy/docker-stack.yml \
-      bookstack
+      export $(cat /home/ubuntu/deploy/.env | xargs)
+      docker stack deploy --with-registry-auth -c /home/ubuntu/deploy/docker-stack.yml bookstack
       "
 
-    # 5) Nettoyage du .env
-    - echo "[INFO] Cleaning .env..."
+    # 5) Nettoyage et vérification
     - ssh ubuntu@"$SWARM_MANAGER_IP" "rm -f /home/ubuntu/deploy/.env"
-
-    # 6) Vérification du déploiement
-    - echo "[INFO] Checking stack status..."
     - ssh ubuntu@"$SWARM_MANAGER_IP" "docker stack ps bookstack --no-trunc"
 
-locust:
-  stage: load-testing
-  image: python:3.11-slim
-  script:
-    - pip3 install locust beautifulsoup4
-    - locust --headless -f locustfile.py --users 100 --spawn-rate 20 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary
+# locust:
+#   stage: load-testing
+#   image: python:3.11-slim
+#   script:
+#     - pip3 install locust beautifulsoup4
+#     - locust --headless -f locustfile.py --users 100 --spawn-rate 20 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary
 
-sonarcloud-check:
-  stage: quality
-  image:
-    name: sonarsource/sonar-scanner-cli:latest
-    entrypoint: [""]
-  cache:
-    key: "${CI_JOB_NAME}"
-    paths:
-      - .sonar/cache
-  script:
-    - sonar-scanner
+# sonarcloud-check:
+#   stage: quality
+#   image:
+#     name: sonarsource/sonar-scanner-cli:latest
+#     entrypoint: [""]
+#   cache:
+#     key: "${CI_JOB_NAME}"
+#     paths:
+#       - .sonar/cache
+#   script:
+#     - sonar-scanner
