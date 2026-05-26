@@ -75,9 +75,9 @@ deploy:
       sudo chown ubuntu:ubuntu /home/ubuntu/deploy
       '
 
-    # 2) Upload du stack file
-    - echo "[INFO] Uploading docker-stack.yml..."
-    - scp -o StrictHostKeyChecking=accept-new docker-stack.yml ubuntu@"$SWARM_MANAGER_IP":/home/ubuntu/deploy/docker-stack.yml
+    # 2) Upload du stack file via SSH pipe (plus robuste que scp)
+    - echo "[INFO] Uploading docker-stack.yml via SSH pipe..."
+    - cat docker-stack.yml | ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" "cat > /home/ubuntu/deploy/docker-stack.yml"
 
     # 3) Génération du fichier .env côté Swarm manager
     - echo "[INFO] Creating .env file on remote..."
