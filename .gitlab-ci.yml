@@ -1,14 +1,14 @@
-# default:
-#   tags:
-#     - bs-runner-3
+ default:
+   tags:
+     - bs-runner-3
 
-# stages:
-#   - verify
-#   - units-test
-#   - build
-#   - deploy
-#   - quality
-#   - load-testing
+ stages:
+   - verify
+   - units-test
+   - build
+   - deploy
+   - quality
+   - load-testing
   
 
 # variables:
@@ -38,6 +38,15 @@
 #     - php artisan config:clear
 #     - php artisan migrate --force
 #     - php artisan test --filter Tests/Activity/AuditLogApiTest.php
+
+ check-static:
+  stage: verify
+  image: webdevops/php:8.2
+  before_script:
+    - composer install --prefer-dist --no-progress
+  script:
+    - composer check-static
+  allow_failure: true
 
 # build:
 #   stage: build
