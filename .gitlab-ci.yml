@@ -46,7 +46,7 @@
     - composer install --prefer-dist --no-progress
   script:
     - composer check-static
-  allow_failure: true
+  
 
  lint-php:
   stage: verify
@@ -55,7 +55,7 @@
     - composer install --prefer-dist --no-progress
   script:
     - composer lint
-  allow_failure: true
+  
 
 
 # build:
