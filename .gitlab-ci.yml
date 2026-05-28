@@ -48,6 +48,16 @@
     - composer check-static
   allow_failure: true
 
+ lint-php:
+  stage: verify
+  image: webdevops/php:8.2
+  before_script:
+    - composer install --prefer-dist --no-progress
+  script:
+    - composer lint
+  allow_failure: true
+
+
 # build:
 #   stage: build
 #   image: docker:24
