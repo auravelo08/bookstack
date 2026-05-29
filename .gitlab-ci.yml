@@ -73,11 +73,11 @@ deploy:
     # Note: Cela suppose que votre docker-stack.yml utilise des variables d'environnement
     - echo "[INFO] Deploying stack..."
     - ssh ubuntu@"$SWARM_MANAGER_IP" "
-      export DB_PASSWORD='${DB_PASSWORD}'
-      export STORAGE_S3_SECRET='${STORAGE_S3_SECRET}'
-      export APP_KEY='${APP_KEY}'
-      export S3_KEY='${S3_KEY}'
-      docker stack deploy --with-registry-auth -c /home/ubuntu/deploy/docker-stack.yml bookstack
+        export DB_PASSWORD='${DB_PASSWORD}';
+        export STORAGE_S3_SECRET='${STORAGE_S3_SECRET}';
+        export APP_KEY='${APP_KEY}';
+        export S3_KEY='${S3_KEY}';
+        docker stack deploy --with-registry-auth -c /home/ubuntu/deploy/docker-stack.yml bookstack
       "
 
     - echo "[INFO] Checking status..."
