@@ -10,7 +10,7 @@
 
 return [
 
-    'app-name'             => 'BookStack La Capsule v2605261204',
+    'app-name'             => 'BookStack La Capsule v2905261700',
     'app-logo'             => '',
     'app-name-header'      => true,
     'app-editor'           => 'wysiwyg',

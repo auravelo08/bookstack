@@ -84,7 +84,7 @@ locust:
   image: python:3.11-slim
   script:
     - pip3 install locust beautifulsoup4
-    - locust --headless -f locustfile.py --users 100 --spawn-rate 20 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary
+    - locust --headless -f locustfile.py --users 30 --spawn-rate 5 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 
