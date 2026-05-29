@@ -8,13 +8,13 @@ stages:
   - deploy
   - quality
   - load-testing
-  
 
 variables:
   IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
   IMAGE_SHA: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   GIT_DEPTH: "0"
+  DOCKER_HOST: unix:///var/run/docker.sock
 
 unit-test:
   stage: units-test
@@ -55,10 +55,6 @@ build:
 deploy:
   stage: deploy
   image: alpine:latest
-
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-
   before_script:
     - apk add --no-cache openssh-client
     - eval "$(ssh-agent -s)"
@@ -66,54 +62,31 @@ deploy:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - echo "$SWARM_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-
   script:
-    # 1) Préparation du dossier de déploiement
-    - echo "[INFO] Preparing remote deploy directory..."
-    - ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" '
-      set -e
-      sudo mkdir -p /home/ubuntu/deploy
-      sudo chown -R ubuntu:ubuntu /home/ubuntu/deploy
-      sudo chmod -R 755 /home/ubuntu/deploy
-      '
-
-    # 2) Upload du stack file
-    - echo "[INFO] Uploading docker-stack.yml..."
-    - scp -o StrictHostKeyChecking=accept-new docker-stack.yml ubuntu@"$SWARM_MANAGER_IP":/home/ubuntu/deploy/docker-stack.yml
-
-    # 3) Génération du fichier .env côté Swarm manager
-    - echo "[INFO] Creating .env file on remote..."
-    - ssh ubuntu@"$SWARM_MANAGER_IP" "
-      set -e
-      echo 'DB_PASSWORD=${DB_PASSWORD}' > /home/ubuntu/deploy/.env
-      echo 'STORAGE_S3_SECRET=${STORAGE_S3_SECRET}' >> /home/ubuntu/deploy/.env
-      echo 'APP_KEY=${APP_KEY}' >> /home/ubuntu/deploy/.env
-      echo 'S3_KEY=${S3_KEY}' >> /home/ubuntu/deploy/.env
-      "
-
-    # 4) Déploiement du stack
+    - echo "[INFO] Preparing deployment..."
+    - ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" "mkdir -p /home/ubuntu/deploy"
+    - cat docker-stack.yml | ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" "cat > /home/ubuntu/deploy/docker-stack.yml"
     - echo "[INFO] Deploying stack..."
     - ssh ubuntu@"$SWARM_MANAGER_IP" "
-      set -e
-      docker stack deploy --with-registry-auth \
-      -c /home/ubuntu/deploy/docker-stack.yml \
-      bookstack
+      export DB_PASSWORD='${DB_PASSWORD}';
+      export STORAGE_S3_SECRET='${STORAGE_S3_SECRET}';
+      export APP_KEY='${APP_KEY}';
+      export S3_KEY='${S3_KEY}';
+      docker stack deploy --with-registry-auth -c /home/ubuntu/deploy/docker-stack.yml bookstack
       "
-
-    # 5) Nettoyage du .env
-    - echo "[INFO] Cleaning .env..."
-    - ssh ubuntu@"$SWARM_MANAGER_IP" "rm -f /home/ubuntu/deploy/.env"
-
-    # 6) Vérification du déploiement
-    - echo "[INFO] Checking stack status..."
+    - echo "[INFO] Checking status..."
     - ssh ubuntu@"$SWARM_MANAGER_IP" "docker stack ps bookstack --no-trunc"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
 
 locust:
   stage: load-testing
   image: python:3.11-slim
   script:
     - pip3 install locust beautifulsoup4
-    - locust --headless -f locustfile.py --users 55 --spawn-rate 10 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary
+    - locust --headless -f locustfile.py --users 100 --spawn-rate 20 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
 
 sonarcloud-check:
   stage: quality
