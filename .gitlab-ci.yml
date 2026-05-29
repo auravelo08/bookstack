@@ -66,11 +66,9 @@ deploy:
   script:
     - echo "[INFO] Preparing deployment..."
     # On crée le dossier en une seule fois
-    - ssh ubuntu@"$SWARM_MANAGER_IP" "mkdir -p /home/ubuntu/deploy"
-
+    - ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" "mkdir -p /home/ubuntu/deploy"
     # Upload du fichier stack
-    - cat docker-stack.yml | ssh ubuntu@"$SWARM_MANAGER_IP" "cat > /home/ubuntu/deploy/docker-stack.yml"
-
+    - cat docker-stack.yml | ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" "cat > /home/ubuntu/deploy/docker-stack.yml"
     # Déploiement en passant les variables dynamiquement sans créer de fichier .env persistant
     # Note: Cela suppose que votre docker-stack.yml utilise des variables d'environnement
     - echo "[INFO] Deploying stack..."
