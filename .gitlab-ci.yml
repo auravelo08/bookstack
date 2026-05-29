@@ -1,21 +1,21 @@
-# default:
-#   tags:
-#     - bs-runner-3
+default:
+  tags:
+    - bs-runner-3
 
-# stages:
-#   - verify
-#   - units-test
-#   - build
-#   - deploy
-#   - quality
-#   - load-testing
+stages:
+  - verify
+  - units-test
+  - build
+  - deploy
+  - quality
+  - load-testing
   
 
-# variables:
-#   IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
-#   IMAGE_SHA: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
-#   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
-#   GIT_DEPTH: "0"
+variables:
+  IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
+  IMAGE_SHA: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  GIT_DEPTH: "0"
 
 # unit-test:
 #   stage: units-test
@@ -108,12 +108,12 @@
 #     - echo "[INFO] Checking stack status..."
 #     - ssh ubuntu@"$SWARM_MANAGER_IP" "docker stack ps bookstack --no-trunc"
 
-# locust:
-#   stage: load-testing
-#   image: python:3.11-slim
-#   script:
-#     - pip3 install locust beautifulsoup4
-#     - locust --headless -f locustfile.py --users 55 --spawn-rate 10 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary
+locust:
+  stage: load-testing
+  image: python:3.11-slim
+  script:
+    - pip3 install locust beautifulsoup4
+    - locust --headless -f locustfile.py --users 30 --spawn-rate 5 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary
 
 # sonarcloud-check:
 #   stage: quality
