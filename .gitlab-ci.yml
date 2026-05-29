@@ -62,7 +62,6 @@ deploy:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - echo "$SWARM_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-
   script:
     - echo "[INFO] Preparing deployment..."
     - ssh -o StrictHostKeyChecking=accept-new ubuntu@"$SWARM_MANAGER_IP" "mkdir -p /home/ubuntu/deploy"
@@ -77,6 +76,8 @@ deploy:
       "
     - echo "[INFO] Checking status..."
     - ssh ubuntu@"$SWARM_MANAGER_IP" "docker stack ps bookstack --no-trunc"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
 
 locust:
   stage: load-testing
@@ -84,6 +85,8 @@ locust:
   script:
     - pip3 install locust beautifulsoup4
     - locust --headless -f locustfile.py --users 100 --spawn-rate 20 -H http://bookstack-alb-2030915568.eu-north-1.elb.amazonaws.com -t 5s --only-summary
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
 
 sonarcloud-check:
   stage: quality
